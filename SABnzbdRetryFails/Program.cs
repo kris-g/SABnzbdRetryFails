@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 
 namespace SABnzbdRetryFails
@@ -15,7 +16,7 @@ namespace SABnzbdRetryFails
 		{
 			string server = null;
 			string apiKey = null;
-
+			
 			foreach (string str in args) {
 				if (str.StartsWith("/server:", StringComparison.InvariantCultureIgnoreCase)) {
 					server = str.Substring(8);
@@ -38,7 +39,6 @@ namespace SABnzbdRetryFails
 			Log(string.Format("Start run at {0}", DateTime.Now));
 			Log(string.Format("Querying server: {0}", server));
 			Log(string.Format("with API key: {0}", apiKey));
-			Log();
 
 			string urlHistory = string.Format("{0}/sabnzbd/api?apikey={1}&mode=history&output=json", server, apiKey);
 			string jsonHistory = GetUrlContent(urlHistory);
@@ -73,6 +73,14 @@ namespace SABnzbdRetryFails
 								Log();
 
 								GetUrlContent(urlDelete);
+									
+								if (nzbName.ToLowerInvariant().Contains("apikey=")) {
+									Log("NZB name contains api key, stripping key out");
+
+									nzbName = Regex.Replace(nzbName, @"apikey=\w+[&]*", "");
+
+									Log(string.Format("New NZB name set: {0}", nzbName));
+								}
 
 								string catQuery = string.Empty;
 								if (!string.IsNullOrEmpty(cat)) {
